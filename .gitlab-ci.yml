@@ -1,0 +1,135 @@
+
+stages:
+  - build
+  - test
+  - release
+  - deploy
+
+# ==========================================| BUILD-STAGE |=========================================== #
+
+Build Backend.Web:
+  stage: build
+  image: microsoft/aspnetcore-build:2.0.5-2.1.4-jessie
+  before_script:
+    - cd src/Backend/Web/Web
+  script:
+    - dotnet publish -c Release
+  artifacts:
+    paths:
+      - src/Backend/Web/Web/bin/Release/netcoreapp2.0/publish/
+    expire_in: 2 hrs
+
+.Build Frontend |TEMPLATE|: &build_frontend_tmpl
+  stage: build
+  image: node:8.9.4
+  artifacts:
+    name: "${CI_BUILD_NAME}_${CI_BUILD_REF_NAME}"
+    expire_in: 1 week
+    paths:
+      - src/Frontend/dist/
+  cache:
+    paths:
+    - src/Frontend/node_modules/
+  before_script:
+    - cd src/Frontend 
+    - npm install --loglevel error --progress false --depth -1
+    - npm run git-version
+
+Build Frontend [PROD]:
+  <<: *build_frontend_tmpl
+  script:
+    - ./node_modules/@angular/cli/bin/ng build --prod --environment=prod --progress false
+  only:
+    - master
+
+Build Frontend:
+  <<: *build_frontend_tmpl
+  script:
+    - ./node_modules/@angular/cli/bin/ng build --environment=stag --progress false
+  except:
+    - master
+
+
+# ===========================================| TEST-STAGE |=========================================== #
+
+Test Backend.Web:
+  stage: test
+  image: microsoft/dotnet:2.0.5-sdk-2.1.4
+  before_script:
+    - cd src/Backend/Web/Web.Tests
+  script: 
+    - dotnet test
+
+Test Frontend:
+  stage: test
+  image: registry.gitlab.com/trassa/b2b-portal/frontend/tests:1.0.0
+  script:
+    - cd src/Frontend 
+    - npm install --loglevel error --progress false --depth -1
+    - ./node_modules/@angular/cli/bin/ng test
+
+# ==========================================| RELEASE-STAGE |========================================== #
+
+.Release |TEMPLATE|: &release_tmpl
+  stage: release
+  dependencies:
+    - Build Backend.Web
+    - Build Frontend
+    - Build Frontend [PROD]
+  before_script: 
+    - mkdir -p dist/web/
+    - mv src/Backend/Web/Web/bin/Release/netcoreapp2.0/publish/* dist/web/
+    - mv src/Frontend/dist/* dist/web/wwwroot/
+  artifacts:
+    paths:
+      - dist
+    name: "TrassaB2B_${CI_COMMIT_REF_SLUG:-$CI_BUILD_REF_SLUG}_${CI_COMMIT_SHA:-$CI_BUILD_REF}"
+    expire_in: 1 week
+
+Release [PROD]:
+  <<: *release_tmpl
+  script:
+    - echo PRODUCTION RELEASE-SCRIPT HERE
+  only:
+    - master
+
+Release:
+  <<: *release_tmpl
+  script:
+    - echo STAGING RELEASE-SCRIPT HERE
+
+# ===========================================| DEPLOY-STAGE |========================================== #
+
+Deploy [PROD]:
+  stage: deploy
+  dependencies:
+    - Release [PROD]
+  script:
+    - echo PRODUCTION DEPLOY-SCRIPT HERE
+  allow_failure: true
+  when: manual
+  only:
+    - master
+
+.Deploy [STAG] | TEMPLATE:
+  script: &deploy_staging
+    - echo STAGING DEPLOY-SCRIPT HERE
+
+Deploy.Auto [STAG]:
+  stage: deploy
+  dependencies:
+    - Release
+  script: *deploy_staging
+  allow_failure: true
+  only:
+    - develop
+
+Deploy [STAG]:
+  stage: deploy
+  dependencies:
+    - Release
+  script: *deploy_staging
+  allow_failure: true
+  when: manual
+  except:
+    - /^(master|develop)*$/

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Migrations\20180423171744_Initial.cs" />
+    <Compile Remove="Migrations\20180423171744_Initial.Designer.cs" />
+    <Compile Remove="Migrations\20180423172001_Initial.cs" />
+    <Compile Remove="Migrations\20180423172001_Initial.Designer.cs" />
+    <Compile Remove="Migrations\20180423172206_Initial.cs" />
+    <Compile Remove="Migrations\20180423172206_Initial.Designer.cs" />
+    <Compile Remove="Migrations\20180423172525_Initial.cs" />
+    <Compile Remove="Migrations\20180423172525_Initial.Designer.cs" />
+    <Compile Remove="Migrations\20180423172818_DataExample.cs" />
+    <Compile Remove="Migrations\20180423172818_DataExample.Designer.cs" />
+    <Compile Remove="Migrations\20180423174102_Initial.cs" />
+    <Compile Remove="Migrations\20180423174102_Initial.Designer.cs" />
+    <Compile Remove="Migrations\20180423192610_DataGenerator.cs" />
+    <Compile Remove="Migrations\20180423192610_DataGenerator.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.0-preview2-final" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.0.3" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.0-preview2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.3" />
+  </ItemGroup>
+
+</Project>
